@@ -92,13 +92,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="result in userResults" :key="result.userId">
-              <td>{{ result.userId }}</td>
+            <tr v-for="(result, userID) in userResults" :key="userID">
+              <td>{{ result.userName }}</td>
               <td
-                v-for="roundName in Object.keys(gameData.rounds)"
-                :key="roundName"
+                v-for="(roundScore, index) in result.scores"
+                :key="index"
               >
-                {{ result.scores[roundName] || 0 }}
+                {{ roundScore || 0 }}
               </td>
               <td>{{ result.totalScore }}</td>
             </tr>
@@ -161,12 +161,13 @@ if (!gameDoc.exists()) {
 }
 const gameData = gameDoc.data() as Game;
 
-type UserResult = {
-  [key: string]: {
-    userId: string;
-    scores: { [roundName: string]: number };
+type UserResultRound = {
+    userName: string;
+    scores: number[];
     totalScore: number;
-  };
+  }
+type UserResult = {
+  [key: string]: UserResultRound;
 };
 
 const userResults = ref<UserResult>({});
@@ -380,20 +381,18 @@ const calculateRoundResults = async () => {
   });
 
   roundAnswers.forEach((answer) => {
-    if (!roundScores[answer.userId]) roundScores[answer.userId] = 0;
-    if (answer.correct) roundScores[answer.userId] += 1;
+    if (!userResults.value[answer.userID]) {
+      userResults.value[answer.userID] = {
+        userName: answer.userName,
+        scores: [],
+        totalScore: 0,
+      } as UserResultRound;
+    }
+    if (!userResults.value[answer.userID].scores[answer.roundID]) 
+      userResults.value[answer.userID].scores[answer.roundID] = 0
+    if (answer.correct) userResults.value[answer.userID].scores[answer.roundID] += 1
+    if (answer.correct) userResults.value[answer.userID].totalScore += 1
   });
 
-  for (const userId in roundScores) {
-    let userResult = userResults.value.find(
-      (result) => result.userId === userId
-    );
-    if (!userResult) {
-      userResult = { userId, scores: {}, totalScore: 0 };
-      userResults.value.push(userResult);
-    }
-    userResult.scores[roundName] = roundScores[userId];
-    userResult.totalScore += roundScores[userId];
-  }
 };
 </script>
