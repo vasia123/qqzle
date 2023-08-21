@@ -14,4 +14,7 @@ export default defineNuxtConfig({
       FB_MEASUREMENT_ID: process.env.FB_MEASUREMENT_ID,
     },
   },
+  app: {
+    buildAssetsDir: "assets", // don't use "_" at the begining of the folder name to avoids nojkill conflict
+  },
 });
